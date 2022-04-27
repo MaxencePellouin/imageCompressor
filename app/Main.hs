@@ -6,6 +6,7 @@ import Args
 import Klusters
 import System.Exit
 import Data.Maybe
+import System.Random
 
 main :: IO ()
 main = do
@@ -14,4 +15,6 @@ main = do
     if (isNothing args) then putStrLn "Invalid arguments" >> exitWith (ExitFailure 84)
     else return ()
     let vArgs = fromJust args
-    print (vArgs)
+    g <- newStdGen
+    let klusters = createNKlusters (getN vArgs) $ genNRandomColorsF (getN vArgs) 0 g (defColor)
+    mapM_ (\k -> putStr (show k)) klusters

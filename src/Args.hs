@@ -2,7 +2,10 @@ module Args
     ( 
         ImcInfos,
         parseArgs,
-        emptyImcInfos
+        emptyImcInfos,
+        getN,
+        getL,
+        getF
     ) where
 
 import Data.Maybe
@@ -13,6 +16,15 @@ instance Show ImcInfos where
 
 emptyImcInfos :: ImcInfos
 emptyImcInfos = ImcInfos (-1) (-1) ""
+
+getN :: ImcInfos -> Int
+getN (ImcInfos n _ _) = n
+
+getL :: ImcInfos -> Double
+getL (ImcInfos _ l _) = l
+
+getF :: ImcInfos -> String
+getF (ImcInfos _ _ f) = f
 
 parseArgs :: [String] -> ImcInfos -> Maybe ImcInfos
 parseArgs [] i = Just i
