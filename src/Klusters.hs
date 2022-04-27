@@ -64,16 +64,36 @@ getColorDiff (ColorF (r1, g1, b1)) (ColorF (r2, g2, b2)) = sqrt
 getKlusterDiff :: Klusters -> Float
 getKlusterDiff (Klusters a p _) = getColorDiff a p
 
--- getPastColor :: Klusters -> ColorF
--- getPastColor (Klusters _ (ColorF (r, g, b)) _) = ColorF (r, g, b)
+-- ! Might need
 
--- getActualColor :: Klusters -> ColorF
--- getActualColor (Klusters (ColorF (r, g, b)) _ _) = ColorF (r, g, b)
+getPastColor :: Klusters -> ColorF
+getPastColor (Klusters _ (ColorF (r, g, b)) _) = ColorF (r, g, b)
+
+getActualColor :: Klusters -> ColorF
+getActualColor (Klusters (ColorF (r, g, b)) _ _) = ColorF (r, g, b)
+
+--  *
+
+--  ! For testing purposes
+
+test :: IO ()
+test = do
+    g <- newStdGen
+    let klusters = createNKlusters 10  $ genNRandomColorsF 10 0 g (ColorF (0, 0, 0))
+    mapM_ (\k -> putStr (show k)) klusters
+
+pixelSample :: [Pixel]
+pixelSample = [Pixel (PosI (0, 0)) (Color (0, 0, 0)),
+    Pixel (PosI (0, 1)) (Color (1, 1, 1)),
+    Pixel (PosI (1, 0)) (Color (2, 2, 2)),
+    Pixel (PosI (1, 1)) (Color (3, 3, 3))]
+
+--  *
 
 meanColor :: [Pixel] -> ColorF
 meanColor [] = ColorF (0, 0, 0)
-meanColor pixels = ColorF (r / (fromIntegral (length pixels)),
-    g / (fromIntegral (length pixels)), b / (fromIntegral (length pixels)))
+meanColor pixels = ColorF (fromIntegral r / (fromIntegral (length pixels)),
+    fromIntegral g / (fromIntegral (length pixels)), fromIntegral b / (fromIntegral (length pixels)))
     where (r, g, b) = foldl (\(r, g, b) (Pixel _ (Color (r', g', b'))) ->
             (r + r', g + g', b + b')) (0, 0, 0) pixels
 
@@ -83,9 +103,3 @@ updateKluster (Klusters a p pixels) = (Klusters (meanColor pixels) a pixels)
 
 defColor :: ColorF
 defColor = ColorF (0, 0, 0)
-
-test :: IO ()
-test = do
-    g <- newStdGen
-    let klusters = createNKlusters 10  $ genNRandomColorsF 10 0 g (ColorF (0, 0, 0))
-    mapM_ (\k -> putStr (show k)) klusters
