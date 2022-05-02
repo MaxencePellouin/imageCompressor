@@ -28,15 +28,15 @@ data Pixel = Pixel PosI Color
 data Klusters = Klusters ColorF ColorF [Pixel]
 
 instance Show Pixel where
-    show (Pixel (PosI (x, y)) (Color (r, g, b))) = "(" ++ show x ++ ", " ++
-        show y ++ ") (" ++ show r ++ ", " ++ show g ++ ", " ++ show b ++ ")"
+    show (Pixel (PosI (x, y)) (Color (r, g, b))) = "(" ++ show x ++ "," ++
+        show y ++ ") (" ++ show r ++ "," ++ show g ++ "," ++ show b ++ ")"
 
 instance Show Color where
-    show (Color (r, g, b)) = "(" ++ show r ++ ", " ++ show g ++ ", " ++
+    show (Color (r, g, b)) = "(" ++ show r ++ "," ++ show g ++ "," ++
         show b ++ ")"
 
 instance Show ColorF where
-    show (ColorF (r, g, b)) = "(" ++ show (round r) ++ ", " ++ show (round g) ++ ", "
+    show (ColorF (r, g, b)) = "(" ++ show (round r) ++ "," ++ show (round g) ++ ","
         ++ show (round b) ++ ")\n"
 
 instance Show Klusters where
