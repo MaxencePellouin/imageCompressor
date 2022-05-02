@@ -83,7 +83,8 @@ getActualColor (Klusters (ColorF (r, g, b)) _ _) = ColorF (r, g, b)
 meanColor :: [Pixel] -> ColorF
 meanColor [] = ColorF (0, 0, 0)
 meanColor pixels = ColorF (fromIntegral r / (fromIntegral (length pixels)),
-    fromIntegral g / (fromIntegral (length pixels)), fromIntegral b / (fromIntegral (length pixels)))
+    fromIntegral g / (fromIntegral (length pixels)), fromIntegral b /
+    (fromIntegral (length pixels)))
     where (r, g, b) = foldl (\(r, g, b) (Pixel _ (Color (r', g', b'))) ->
             (r + r', g + g', b + b')) (0, 0, 0) pixels
 
@@ -105,7 +106,8 @@ lineToPixel line = Pixel position color
     where
         positionn = read (beforeChar ')' line) :: (Int, Int)
         colorr = read (nextChar '(' (tail line)) :: (Int, Int, Int)
-        position = PosI (fromIntegral (fst positionn), fromIntegral (snd positionn))
+        position = PosI
+            (fromIntegral (fst positionn), fromIntegral (snd positionn))
         color = getColorFromThreeInts colorr
 
 parsePixels :: String -> [Pixel]
@@ -118,7 +120,8 @@ addPixelsToKlusters (p:ps) k = addPixelsToKlusters ps (addPixelToKluster p k)
 addPixelToKluster :: Pixel -> [Klusters] -> [Klusters]
 addPixelToKluster _ [] = []
 addPixelToKluster (Pixel x col) ks =
-    addPixelToKluster' (Pixel x col) ks (fromJust (elemIndex (foldl1' min diffs) diffs))
+    addPixelToKluster' (Pixel x col) ks
+        (fromJust (elemIndex (foldl1' min diffs) diffs))
         where diffs = map (\k -> getColorDiff (colorToColorF col) (getActualColor k)) ks
 
 addPixelToKluster' :: Pixel -> [Klusters] -> Int -> [Klusters]
@@ -128,11 +131,13 @@ addPixelToKluster' pxl ((Klusters a p pixels):ks) i =
     else (Klusters a p pixels) : addPixelToKluster' pxl ks (i - 1)
 
 colorToColorF :: Color -> ColorF
-colorToColorF (Color (r, g, b)) = ColorF (fromIntegral r, fromIntegral g, fromIntegral b)
+colorToColorF (Color (r, g, b)) = ColorF
+    (fromIntegral r, fromIntegral g, fromIntegral b)
 
 runKMeans :: [Pixel] -> [Klusters] -> Float -> Float -> [Klusters]
 runKMeans pxls ks c min = if min < c then ks
-    else  runKMeans pxls spreadedPix c (foldl1' max (map (\k -> getKlusterDiff k) spreadedPix))
+    else  runKMeans pxls spreadedPix c
+        (foldl1' max (map (\k -> getKlusterDiff k) spreadedPix))
     where 
         spreadedPix = spreadPixels pxls (map clearKluster ks)
 
