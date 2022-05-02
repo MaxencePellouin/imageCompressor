@@ -8,12 +8,15 @@ module Klusters
         ColorF,
         Pixel,
         PosI,
-        defColor
+        defColor,
+        parsePixels,
+        lineToPixel
     ) where
     
 import System.Random
 import System.IO.Unsafe
 import Data.Maybe
+import File
 
 data Color = Color (Int, Int, Int)
 data PosI = PosI (Integer, Integer)
@@ -99,7 +102,21 @@ meanColor pixels = ColorF (fromIntegral r / (fromIntegral (length pixels)),
 
 updateKluster :: Klusters -> Klusters
 updateKluster (Klusters a p []) = (Klusters a a [])
-updateKluster (Klusters a p pixels) = (Klusters (meanColor pixels) a pixels)
+updateKluster (Klusters a p pixels) = (Klusters (meanColor pixels) a [])
 
 defColor :: ColorF
 defColor = ColorF (0, 0, 0)
+
+getColorFromThreeInts :: (Int, Int, Int) -> Color
+getColorFromThreeInts (r, g, b) = Color (r, g, b)
+
+lineToPixel :: String -> Pixel
+lineToPixel line = Pixel position color
+    where
+        positionn = read (beforeChar ')' line) :: (Int, Int)
+        colorr = read (nextChar '(' (tail line)) :: (Int, Int, Int)
+        position = PosI (fromIntegral (fst positionn), fromIntegral (snd positionn))
+        color = getColorFromThreeInts colorr
+
+parsePixels :: String -> [Pixel]
+parsePixels = map lineToPixel . contentsToLines
