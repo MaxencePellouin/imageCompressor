@@ -10,12 +10,15 @@ module Klusters
         PosI,
         defColor,
         parsePixels,
-        lineToPixel
+        lineToPixel,
+        addPixelsToKlusters,
+        runKMeans
     ) where
     
 import System.Random
 import System.IO.Unsafe
 import Data.Maybe
+import Data.List
 import File
 
 data Color = Color (Int, Int, Int)
@@ -26,15 +29,15 @@ data Klusters = Klusters ColorF ColorF [Pixel]
 
 instance Show Pixel where
     show (Pixel (PosI (x, y)) (Color (r, g, b))) = "(" ++ show x ++ ", " ++
-        show y ++ ") (" ++ show r ++ ", " ++ show g ++ ", " ++ show b ++ ")\n"
+        show y ++ ") (" ++ show r ++ ", " ++ show g ++ ", " ++ show b ++ ")"
 
 instance Show Color where
     show (Color (r, g, b)) = "(" ++ show r ++ ", " ++ show g ++ ", " ++
         show b ++ ")"
 
 instance Show ColorF where
-    show (ColorF (r, g, b)) = "(" ++ show r ++ ", " ++ show g ++ ", "
-        ++ show b ++ ")\n"
+    show (ColorF (r, g, b)) = "(" ++ show (round r) ++ ", " ++ show (round g) ++ ", "
+        ++ show (round b) ++ ")\n"
 
 instance Show Klusters where
     show (Klusters (ColorF (r, g, b)) _ []) = "--\n" ++ show (ColorF (r, g, b))
@@ -77,22 +80,6 @@ getActualColor (Klusters (ColorF (r, g, b)) _ _) = ColorF (r, g, b)
 
 --  *
 
---  ! For testing purposes
-
-test :: IO ()
-test = do
-    g <- newStdGen
-    let klusters = createNKlusters 10  $ genNRandomColorsF 10 0 g (ColorF (0, 0, 0))
-    mapM_ (\k -> putStr (show k)) klusters
-
-pixelSample :: [Pixel]
-pixelSample = [Pixel (PosI (0, 0)) (Color (0, 0, 0)),
-    Pixel (PosI (0, 1)) (Color (1, 1, 1)),
-    Pixel (PosI (1, 0)) (Color (2, 2, 2)),
-    Pixel (PosI (1, 1)) (Color (3, 3, 3))]
-
---  *
-
 meanColor :: [Pixel] -> ColorF
 meanColor [] = ColorF (0, 0, 0)
 meanColor pixels = ColorF (fromIntegral r / (fromIntegral (length pixels)),
@@ -102,7 +89,10 @@ meanColor pixels = ColorF (fromIntegral r / (fromIntegral (length pixels)),
 
 updateKluster :: Klusters -> Klusters
 updateKluster (Klusters a p []) = (Klusters a a [])
-updateKluster (Klusters a p pixels) = (Klusters (meanColor pixels) a [])
+updateKluster (Klusters a p pixels) = (Klusters (meanColor pixels) a pixels)
+
+clearKluster :: Klusters -> Klusters
+clearKluster (Klusters a p _) = (Klusters a p [])
 
 defColor :: ColorF
 defColor = ColorF (0, 0, 0)
@@ -120,3 +110,34 @@ lineToPixel line = Pixel position color
 
 parsePixels :: String -> [Pixel]
 parsePixels = map lineToPixel . contentsToLines
+
+addPixelsToKlusters :: [Pixel] -> [Klusters] -> [Klusters]
+addPixelsToKlusters [] k = k
+addPixelsToKlusters (p:ps) k = addPixelsToKlusters ps (addPixelToKluster p k)
+
+addPixelToKluster :: Pixel -> [Klusters] -> [Klusters]
+addPixelToKluster _ [] = []
+addPixelToKluster (Pixel x col) ks =
+    addPixelToKluster' (Pixel x col) ks (fromJust (elemIndex (foldl1' min diffs) diffs))
+        where diffs = map (\k -> getColorDiff (colorToColorF col) (getActualColor k)) ks
+
+addPixelToKluster' :: Pixel -> [Klusters] -> Int -> [Klusters]
+addPixelToKluster' _ [] _ = []
+addPixelToKluster' pxl ((Klusters a p pixels):ks) i =
+    if i == 0 then (Klusters a p (pxl:pixels)) : ks
+    else (Klusters a p pixels) : addPixelToKluster' pxl ks (i - 1)
+
+colorToColorF :: Color -> ColorF
+colorToColorF (Color (r, g, b)) = ColorF (fromIntegral r, fromIntegral g, fromIntegral b)
+
+runKMeans :: [Pixel] -> [Klusters] -> Float -> Float -> [Klusters]
+runKMeans pxls ks c min = if min < c then ks
+    else  runKMeans pxls spreadedPix c (foldl1' max (map (\k -> getKlusterDiff k) spreadedPix))
+    where 
+        spreadedPix = spreadPixels pxls (map clearKluster ks)
+
+spreadPixels :: [Pixel] -> [Klusters] -> [Klusters]
+spreadPixels [] ks = ks
+spreadPixels pxls ks = map updateKluster addedPixels
+    where
+        addedPixels = addPixelsToKlusters pxls ks
