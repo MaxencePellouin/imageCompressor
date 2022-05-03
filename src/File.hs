@@ -1,5 +1,5 @@
 module File
-    ( 
+    (
         catchFileError,
         nextChar,
         beforeChar,
@@ -8,7 +8,6 @@ module File
 
 import Control.Exception
 import System.Exit
-import Data.List
 
 catchFileError :: SomeException -> IO String
 catchFileError e = putStrLn "Error reading file" >> exitWith (ExitFailure 84)
@@ -18,7 +17,7 @@ contentsToLines = lines
 
 nextChar :: Char -> String -> String
 nextChar c [] = []
-nextChar c (x:xs) = if c == x then (x:xs) else nextChar c xs
+nextChar c (x:xs) = if c == x then x:xs else nextChar c xs
 
 beforeChar :: Char -> String -> String
 beforeChar _ [] = []
